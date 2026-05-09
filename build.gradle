@@ -1,0 +1,33 @@
+plugins {
+    id 'java'
+    id "com.gradleup.shadow" version "9.0.0"
+}
+
+group = 'com.dnablue2112'
+version = '1.0-SNAPSHOT'
+defaultTasks("shadow")
+
+repositories {
+    mavenCentral()
+    maven { url 'https://jitpack.io' }
+}
+
+dependencies {
+    implementation 'com.github.RouHim:jaudiotagger:2.0.19'
+    implementation 'org.slf4j:slf4j-nop:2.0.17'
+}
+
+shadowJar {
+    archiveFileName.set("_MusicCheck.jar")
+    duplicatesStrategy = DuplicatesStrategy.EXCLUDE
+}
+
+tasks.jar {
+    manifest {
+        attributes["Main-Class"] = "com.dnablue2112.Main"
+    }
+}
+
+tasks.withType(JavaCompile) {
+    options.encoding = 'UTF-8'
+}
