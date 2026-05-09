@@ -17,6 +17,7 @@ import java.util.List;
 public class MusicCheck {
 
     List<File> musicFiles = new ArrayList<>();
+    boolean checkLyrics, checkAlbumArt;
 
     public MusicCheck() {
         File directory = new File("./");
@@ -25,30 +26,44 @@ public class MusicCheck {
         searchDirectory(directory);
         //Now we have a list of music files to check
         System.out.println("Found " + musicFiles.size() + " music files to check. Starting now...");
+        //Ask what to check
+
+        System.out.print("Should we check album art? [Y/n]");
+        String albumArtResponse = System.console().readLine();
+        checkAlbumArt = albumArtResponse.isEmpty() || albumArtResponse.equalsIgnoreCase("Y");
+
+        System.out.print("Should we check lyrics? [Y/n]");
+        String lyricsResponse = System.console().readLine();
+        checkLyrics = lyricsResponse.isEmpty() || lyricsResponse.equalsIgnoreCase("Y");
+
         //Loop over each file and check if there is an issue to report
         for (File f : musicFiles) {
-            try {
-                AudioFile audioFile = AudioFileIO.read(f);
-                Tag tag = audioFile.getTag();
-                //Check for album art
-                List<Artwork> albumArt = tag.getArtworkList();
-                if (albumArt.isEmpty()) {
-                    System.out.println("No Album Art for " + f.getPath());
+            if (checkAlbumArt) {
+                try {
+                    AudioFile audioFile = AudioFileIO.read(f);
+                    Tag tag = audioFile.getTag();
+                    //Check for album art
+                    List<Artwork> albumArt = tag.getArtworkList();
+                    if (albumArt.isEmpty()) {
+                        System.out.println("No Album Art for " + f.getPath());
+                    }
+                } catch (IOException | CannotReadException | TagException | ReadOnlyFileException |
+                         InvalidAudioFrameException e) {
+                    System.out.println("Failed to read file " + f.getPath());
+                    System.out.println(e.getMessage());
                 }
-            } catch (IOException | CannotReadException | TagException | ReadOnlyFileException |
-                     InvalidAudioFrameException e) {
-                System.out.println("Failed to read file " + f.getPath());
-                System.out.println(e.getMessage());
             }
-            //Check for lyrics
-            File syncedLyrics = new File(f.getParentFile(), getFileNameWithoutExtension(f) + ".lrc");
-            File plainLyrics = new File(f.getParentFile(), getFileNameWithoutExtension(f) + ".txt");
-            if (syncedLyrics.exists()) {
-                continue;
-            } else if (plainLyrics.exists()) {
-                System.out.println("Only plain lyrics for " + f.getPath());
-            } else {
-                System.out.println("No lyrics for " + f.getPath());
+            if (checkLyrics) {
+                //Check for lyrics
+                File syncedLyrics = new File(f.getParentFile(), getFileNameWithoutExtension(f) + ".lrc");
+                File plainLyrics = new File(f.getParentFile(), getFileNameWithoutExtension(f) + ".txt");
+                if (syncedLyrics.exists()) {
+                    continue;
+                } else if (plainLyrics.exists()) {
+                    System.out.println("Only plain lyrics for " + f.getPath());
+                } else {
+                    System.out.println("No lyrics for " + f.getPath());
+                }
             }
         }
     }
