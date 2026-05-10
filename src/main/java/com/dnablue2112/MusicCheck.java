@@ -28,13 +28,15 @@ public class MusicCheck {
         System.out.println("Found " + musicFiles.size() + " music files to check. Starting now...");
         //Ask what to check
 
-        System.out.print("Should we check album art? [Y/n]");
+        System.out.print("Should we check album art? [Y/n] ");
         String albumArtResponse = System.console().readLine();
         checkAlbumArt = albumArtResponse.isEmpty() || albumArtResponse.equalsIgnoreCase("Y");
 
-        System.out.print("Should we check lyrics? [Y/n]");
+        System.out.print("Should we check lyrics? [Y/n] ");
         String lyricsResponse = System.console().readLine();
         checkLyrics = lyricsResponse.isEmpty() || lyricsResponse.equalsIgnoreCase("Y");
+
+        //TODO: Make a report text file to store the report in so that it can be marked off as we go
 
         //Loop over each file and check if there is an issue to report
         for (File f : musicFiles) {
