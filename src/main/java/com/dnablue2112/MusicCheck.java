@@ -9,7 +9,11 @@ import org.jaudiotagger.tag.Tag;
 import org.jaudiotagger.tag.TagException;
 import org.jaudiotagger.tag.images.Artwork;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,6 +41,8 @@ public class MusicCheck {
         checkLyrics = lyricsResponse.isEmpty() || lyricsResponse.equalsIgnoreCase("Y");
 
         //TODO: Make a report text file to store the report in so that it can be marked off as we go
+        //Make some lists for paths that need to be reported
+        List<String> albumArtPaths = new ArrayList<>();
 
         //Loop over each file and check if there is an issue to report
         for (File f : musicFiles) {
@@ -48,6 +54,19 @@ public class MusicCheck {
                     List<Artwork> albumArt = tag.getArtworkList();
                     if (albumArt.isEmpty()) {
                         System.out.println("No Album Art for " + f.getPath());
+                        albumArtPaths.add(f.getPath());
+                    } else {
+                        //Check if the art is tiny
+                        int lowerBound = 400;
+                        Artwork art = albumArt.getFirst();
+                        byte[] imageData = art.getBinaryData();
+                        ByteArrayInputStream bais = new ByteArrayInputStream(imageData);
+                        BufferedImage bimg = ImageIO.read(bais);
+
+                        if (bimg.getHeight() < lowerBound || bimg.getWidth() < 400) {
+                            System.out.println(f.getName() + " w:" + bimg.getWidth() + " h:" + bimg.getHeight());
+                        }
+
                     }
                 } catch (IOException | CannotReadException | TagException | ReadOnlyFileException |
                          InvalidAudioFrameException e) {
@@ -68,6 +87,34 @@ public class MusicCheck {
                 }
             }
         }
+
+        System.out.print("Should we save a report for album art? [y/N] ");
+        String albumArtReportResponse = System.console().readLine();
+        boolean reportAlbumArt = albumArtReportResponse.equalsIgnoreCase("Y");
+        if (reportAlbumArt) {
+            albumArtPaths.sort(String.CASE_INSENSITIVE_ORDER);
+            File report = new File(directory, "AlbumArtReport.txt");
+            if (!report.exists()) {
+                try {
+                    report.createNewFile();
+                } catch (IOException e) {
+                    System.out.println("Report failed to create");
+                    return;
+                }
+            }
+            try {
+                FileWriter fileWriter = new FileWriter(report);
+                for (String path : albumArtPaths) {
+                    //Write to text file
+                    fileWriter.write(path + "\n");
+                }
+                fileWriter.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+                System.out.println("Failed to write report");
+            }
+        }
+
     }
 
     private void searchDirectory(File dir) {
